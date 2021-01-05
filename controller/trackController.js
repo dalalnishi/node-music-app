@@ -13,7 +13,7 @@ exports.addTrack = (body, done) => {
                 track_id: tracks[i].id,
                 trackName: tracks[i].name,
                 previewURL: tracks[i].previewURL,
-                // album_id: tracks[i].albumId
+                album_id: tracks[i].albumId
             }
             allTracks.push(obj);
         }
@@ -31,7 +31,7 @@ exports.addTrack = (body, done) => {
     });
 }
 
-exports.getAllTracks = (uid, done) => {
+exports.getAllTracks = (params, done) => {
     // Media.findAll({ 
     //     include: [{ model: Artist, all: true, nested: true }]
     // }).then((res) => {
@@ -39,9 +39,11 @@ exports.getAllTracks = (uid, done) => {
     // }).catch((err) => {
     //     done(err);
     // });
-    db.query("SELECT t.*, a.album_id, a.albumName, at.artist_id, at.name FROM `tbl_tracks` as t, `tbl_albums` as a, `tbl_artists` as at where t.album_id = a.album_id and a.artistId = at.artist_id", { type: Sequelize.QueryTypes.SELECT })
+
+    const offset = (params.page - 1) * params.limit; // Lazy loading
+    db.query("SELECT t.*, a.album_id, a.albumName, at.artist_id, at.name FROM `tbl_tracks` as t, `tbl_albums` as a, `tbl_artists` as at where t.album_id = a.album_id and a.artistId = at.artist_id LIMIT "+params.limit+ " OFFSET "+offset, { type: Sequelize.QueryTypes.SELECT })
         .then((res) => {
-            db.query("SELECT User_id, Track_id from `tbl_likes` WHERE User_id ='"+uid+"'", { type: Sequelize.QueryTypes.SELECT })
+            db.query("SELECT User_id, Track_id from `tbl_likes` WHERE User_id ='"+params.uid+"'", { type: Sequelize.QueryTypes.SELECT })
             .then((data) => {
                 data.map((item) => {
                     return res.map((x) => {
@@ -55,6 +57,28 @@ exports.getAllTracks = (uid, done) => {
                 done(err);
             });
         }).catch(err => {
+            done(err);
+        });
+}
+
+exports.searchRecords = (reqParams, done) => {
+    db.query("SELECT t.*, a.album_id, a.albumName, at.artist_id, at.name FROM `tbl_tracks` as t, `tbl_albums` as a, `tbl_artists` as at where t.album_id = a.album_id and a.artistId = at.artist_id and (t.trackName like '"+reqParams.searchString+"%' OR a.albumName like '"+reqParams.searchString+"%' OR at.name like '"+reqParams.searchString+"%')", { type: Sequelize.QueryTypes.SELECT })
+        .then((res) => {
+            db.query("SELECT User_id, Track_id from `tbl_likes` WHERE User_id ='"+reqParams.uid+"'", { type: Sequelize.QueryTypes.SELECT })
+            .then((data) => {
+                data.map((item) => {
+                    return res.map((x) => {
+                        if(x.track_id === item.Track_id) {
+                            x.like = true;
+                        }                        
+                    })
+                });
+                done(null, res);
+            }).catch(err => {
+                done(err);
+            });
+        })
+        .catch(err => {
             done(err);
         });
 }
