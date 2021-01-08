@@ -1,39 +1,67 @@
-const { db } = require('../db.config');
-const Sequelize = require('sequelize');
 const LikesAction = require('../schemas/likesAction');
+const User = require('../schemas/user');
+const Media = require('../schemas/media');
 
-exports.saveLikedMedia = (body, done) => {
-    var count = 0;
-    db.query("SELECT count(*) as cnt from `tbl_likes` WHERE User_id='"+body.User_id+"' AND Track_id='"+body.Track_id+"'", { type: Sequelize.QueryTypes.SELECT }).then((res) =>{
-        if(res) {
-            count = res[0].cnt;
-            if(count > 0) {
-                db.query("DELETE FROM `tbl_likes` WHERE User_id='"+body.User_id+"' AND Track_id='"+body.Track_id+"'").then((res) => {
-                    done(null, res);
-                })
-                .catch(err => {
-                    done(err);
-                })
+const { RequestInputError } = require('../shared/errors');
+
+exports.saveLikedMedia = async (req, res) => {
+    try {
+        const response = await LikesAction.findAndCountAll({
+            where: {
+                user_id: req.body.user_id,
+                track_id: req.body.track_id
             }
-            else {
-                LikesAction.create(body).then((resp) => {
-                    if(resp) {
-                        done(null, resp);
-                    }
-                })
-                .catch((err) => {
-                    done(err);
-                });
-            }
+        });
+        if(response.count > 0) {
+            const deletedRecord = LikesAction.destroy({
+                where: {
+                    user_id: req.body.user_id,
+                    track_id: req.body.track_id
+                }
+            });
+            if(!deletedRecord) throw new RequestInputError('Failed to delete user favourite.');
+            return res.status(200).json(deletedRecord);
+        } else {
+            const newLiked = LikesAction.create(req.body);
+            if(!newLiked) throw new RequestInputError('Failed to add user favourite.');
+            return res.status(201).json(newLiked);
         }
-    });
+    } catch (error) {
+        if (error.error_code === 'RequestInputError') {
+            return res.status(403).send({ error: true, message: error.message });
+        }
+        res.status(500).send({ error: true, message: 'Error occurred while saving user likes data.'+error });
+    }
 }
 
-exports.getByUserID = (uid, done) => {
-    db.query("SELECT t.*, a.album_id, a.albumName, at.artist_id, at.name FROM `tbl_likes` as l, `tbl_users` as u, `tbl_tracks` as t, `tbl_albums` as a, `tbl_artists` as at WHERE l.User_id='"+uid+"'and l.User_id = u.id and l.Track_id = t.Track_id and t.album_id = a.album_id and a.artistId = at.artist_id", { type: Sequelize.QueryTypes.SELECT })
-        .then((res) => {
-            done(null, res);
-        }).catch(err => {
-            done(err);
+exports.getByUserID = async (req, res) => {
+    try {
+        let userLikes = await LikesAction.findAll({
+            where: {
+                user_id: req.params.user_id
+            },
+            include: [
+                { model: Media, all: true, nested: true },
+            ]
         });
+        
+        userLikes = userLikes.map((x) => {
+            return {
+                Track_id: x.tbl_track.id,
+                Track_name: x.tbl_track.name,
+                previewURL: x.tbl_track.previewURL,
+                Album_id: x.tbl_track.tbl_album.id,
+                Album_name: x.tbl_track.tbl_album.name,
+                Artist_id: x.tbl_track.tbl_album.tbl_artist.id,
+                Artist_name: x.tbl_track.tbl_album.tbl_artist.name,
+            };
+        });
+        if(!userLikes) throw new RequestInputError('Failed to fetch user favourite.');
+        return res.status(200).json(userLikes);
+    } catch (error) {
+        if (error.error_code === 'RequestInputError') {
+            return res.status(403).send({ error: true, message: error.message });
+        }
+        res.status(500).send({ error: true, message: 'Error occurred while fetching user likes data.'+error });
+    }
 }

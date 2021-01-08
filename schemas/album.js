@@ -4,32 +4,23 @@ const Sequelize = require('sequelize');
 const artist = require('./artist');
 
 const Album = db.define('tbl_album', {
-    album_id: {
+    id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV1,
         primaryKey: true,
     },
-    albumName: {
+    name: {
         type: Sequelize.STRING,
         allowNull: false
     },
-    artistId: {
-        type: Sequelize.UUID,
-    }
 });
 
-Album.belongsTo(artist);
-artist.hasMany(Album);
+Album.belongsTo(artist, { foreignKey: 'artist_id' });
 
-artist.sync({ force: false }).then((res) => {
-    console.log('Artist table created successfully.');
-    Album.sync({ force: false }).then((res) => {
-        console.log('Album table created successfully.');
-    }).catch((err) => {
-        console.log('Error in creation of album table: ', err);
-    });
+Album.sync({ force: false }).then(() => {
+    console.log('Album table created successfully.');
 }).catch((err) => {
-    console.log('Error in creation of artist table: ', err);
-})
+    console.log('Error in creation of album table: ', err);
+});
 
 module.exports = Album;

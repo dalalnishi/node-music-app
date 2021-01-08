@@ -2,7 +2,7 @@ const { db } = require('../db.config');
 const Sequelize = require('sequelize');
 
 const Artist = db.define('tbl_artist', {
-    artist_id: {
+    id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV1,
         primaryKey: true,
@@ -13,7 +13,7 @@ const Artist = db.define('tbl_artist', {
     }
 });
 
-Artist.sync({ force: false }).then((res) => {
+Artist.sync({ force: false }).then(() => {
     console.log('Artist table created successfully.');
 }).catch((err) => {
     console.log('Error in creation of artist table: ', err);

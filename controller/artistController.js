@@ -1,27 +1,29 @@
 const Artist = require('../schemas/artist');
 const axios = require('axios');
+require("dotenv").config();
 
-exports.addArtist = (body, done) => {
-    axios.get('https://api.napster.com/v2.2/artists/top?apikey=ZTk2YjY4MjMtMDAzYy00MTg4LWE2MjYtZDIzNjJmMmM0YTdm').then((res) => {
-        const artists = res.data.artists;
-        var allArtists = [];
-        for(i = 0; i < artists.length; i++) {
-            var obj = {
-                artist_id: artists[i].id,
-                name: artists[i].name
+const { RequestInputError } = require('../shared/errors');
+
+exports.addArtist = async (req, res) => {
+    try {
+        const response = await axios.get('https://api.napster.com/v2.2/artists/top?apikey='+process.env.ARTIST_APIKEY);
+        const { artists } = response.data;
+        if(!artists) throw new RequestInputError('Failed to fetch Artists data');
+
+        const allArtists = artists.map((artist) => {
+            return {
+                id: artist.id,
+                name: artist.name
             }
-            allArtists.push(obj);
-        }
-        Artist.bulkCreate(allArtists).then((resp) => {
-            if(resp) {
-               done(null, resp);
-            }
-        })
-        .catch((err) => {
-            done(err);
         });
-    })
-    .catch(err => {
-        done(err);
-    });
+
+        const createdArtists = await Artist.bulkCreate(allArtists);
+        if(!createdArtists) throw new RequestInputError('Failed to create Artists.');
+        return res.status(201).json(createdArtists);
+    } catch (error) {
+        if (error.error_code === 'RequestInputError') {
+            return res.send({ error: true, message: error.message });
+        }
+        res.status(500).send({ error: true, message: 'Error occurred while creating new Artists.'+error });
+    }
 }

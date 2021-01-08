@@ -4,12 +4,12 @@ const Sequelize = require('sequelize');
 const Album = require('./album');
 
 const Media = db.define('tbl_tracks', {
-    track_id: {
+    id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV1,
         primaryKey: true,
     },
-    trackName: {
+    name: {
         type: Sequelize.STRING,
         allowNull: false
     },
@@ -17,23 +17,14 @@ const Media = db.define('tbl_tracks', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    album_id: {
-        type: Sequelize.UUID,
-    }
 });
 
-Media.belongsTo(Album);
-Album.hasMany(Media);
+Media.belongsTo(Album, { foreignKey: 'album_id' });
 
-Album.sync({ force: false }).then((res) => {
-    console.log('Album table created successfully.');
-    Media.sync({ force: false }).then((res) => {
-        console.log('Track table created successfully.');
-    }).catch((err) => {
-        console.log('Error in creation of track table: ', err);
-    });
+Media.sync({ force: false }).then((res) => {
+    console.log('Track table created successfully.');
 }).catch((err) => {
-    console.log('Error in creation of album table: ', err);
+    console.log('Error in creation of track table: ', err);
 });
 
 module.exports = Media;
