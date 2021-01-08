@@ -5,7 +5,7 @@ require("dotenv").config();
 const { db } = require('./db.config');
 
 const routes = require('./routes/index');
-// const schemas = require('./schemas/index');
+require('./schemas/index');
 
 const app = express();
 app.use(cors());
