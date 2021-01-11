@@ -1,4 +1,6 @@
-const User = require('../schemas/user');
+const db = require('../db.config');
+const { tbl_user: User } = db;
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 

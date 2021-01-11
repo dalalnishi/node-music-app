@@ -1,6 +1,8 @@
-const Album = require('../schemas/album');
+const db = require('../db.config');
 const axios = require('axios');
 require("dotenv").config();
+
+const { tbl_album: Album } = db;
 
 const { RequestInputError } = require('../shared/errors');
 

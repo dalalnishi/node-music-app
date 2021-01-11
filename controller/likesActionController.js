@@ -1,5 +1,5 @@
-const Media = require('../schemas/media');
-const LikesAction = require('../schemas/likesAction');
+const db = require('../db.config');
+const { tbl_likes: LikesAction, tbl_media: Media } = db;
 
 const { RequestInputError } = require('../shared/errors');
 

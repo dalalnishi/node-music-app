@@ -1,9 +1,8 @@
-const Artist = require('../schemas/artist');
-const Album = require('../schemas/album');
-const Media = require('../schemas/media');
-const Likes = require('../schemas/likesAction');
+const db = require('../db.config');
 const axios = require('axios');
 require("dotenv").config();
+
+const { tbl_artist: Artist, tbl_album: Album, tbl_media: Media, tbl_likes: Likes } = db;
 
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
@@ -70,19 +69,19 @@ exports.getAllTracks = async (req, res) => {
                     }
                 })
             });
-            tracks = tracks.map((x) => {
-                return {
-                    Track_id: x.id,
-                    Track_name: x.name,
-                    previewURL: x.previewURL,
-                    Album_id: x.tbl_album.id,
-                    Album_name: x.tbl_album.name,
-                    Artist_id: x.tbl_album.tbl_artist.id,
-                    Artist_name: x.tbl_album.tbl_artist.name,
-                    like: x.dataValues.like || false
-                };
-            });
         }
+        tracks = tracks.map((x) => {
+            return {
+                Track_id: x.id,
+                Track_name: x.name,
+                previewURL: x.previewURL,
+                Album_id: x.tbl_album.id,
+                Album_name: x.tbl_album.name,
+                Artist_id: x.tbl_album.tbl_artist.id,
+                Artist_name: x.tbl_album.tbl_artist.name,
+                like: x.dataValues.like || false
+            };
+        });
         return res.status(200).json(tracks);
     } catch (error) {
         if (error.error_code === 'RequestInputError') {
@@ -147,19 +146,19 @@ exports.searchRecords = async (req, res) => {
                     }
                 })
             });
-            searchResult = searchResult.map((x) => {
-                return {
-                    Track_id: x.id,
-                    Track_name: x.name,
-                    previewURL: x.previewURL,
-                    Album_id: x.tbl_album.id,
-                    Album_name: x.tbl_album.name,
-                    Artist_id: x.tbl_album.tbl_artist.id,
-                    Artist_name: x.tbl_album.tbl_artist.name,
-                    like: x.dataValues.like || false
-                };
-            });
         }
+        searchResult = searchResult.map((x) => {
+            return {
+                Track_id: x.id,
+                Track_name: x.name,
+                previewURL: x.previewURL,
+                Album_id: x.tbl_album.id,
+                Album_name: x.tbl_album.name,
+                Artist_id: x.tbl_album.tbl_artist.id,
+                Artist_name: x.tbl_album.tbl_artist.name,
+                like: x.dataValues.like || false
+            };
+        });
         return res.status(200).json(searchResult);
     } catch (error) {
         if (error.error_code === 'RequestInputError') {
