@@ -4,7 +4,6 @@ const cors = require('cors');
 require("dotenv").config();
 const { db } = require('./db.config');
 
-const routes = require('./routes/index');
 require('./schemas/index');
 
 const app = express();
@@ -13,6 +12,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+const routes = require('./routes/index');
 app.use(routes);
 
 app.get('/', function (req, res) {

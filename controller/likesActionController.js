@@ -1,6 +1,5 @@
-const LikesAction = require('../schemas/likesAction');
-const User = require('../schemas/user');
 const Media = require('../schemas/media');
+const LikesAction = require('../schemas/likesAction');
 
 const { RequestInputError } = require('../shared/errors');
 
